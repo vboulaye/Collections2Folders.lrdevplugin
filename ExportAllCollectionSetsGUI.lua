@@ -6,6 +6,7 @@ local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
 
 local ExportCollectionSet = require 'ExportCollectionSet'
+local Utils = require 'Utils'
 
 local function showExportDialog()
 
@@ -25,6 +26,7 @@ local function showExportDialog()
 
         properties.rootPath = Utils.getSavedRootPath()
         properties.exportSettingsPath = Utils.getSavedExportSettingsPath()
+        properties.deleteUnmatchedFiles = false
 
         local contents = f:column {
           bind_to_object = properties,
@@ -89,6 +91,10 @@ local function showExportDialog()
             title = LrView.bind('exportSettingsPath'),
             fill_horizontal = 1,
           },
+          f:checkbox {
+            title = "Delete unmatched image/video files inside collection folders",
+            value = LrView.bind('deleteUnmatchedFiles'),
+          },
         }
 
         local result = LrDialogs.presentModalDialog({
@@ -99,8 +105,23 @@ local function showExportDialog()
 
         if result == 'ok' then
           if properties.rootPath then
+            local deleteUnmatchedFiles = properties.deleteUnmatchedFiles
+            if deleteUnmatchedFiles and LrDialogs.confirm(
+              "Delete unmatched export files?",
+              "This permanently deletes image/video files in the exported collection folders that do not match a photo currently in those collections.",
+              "Delete Files",
+              "Cancel"
+            ) ~= 'ok' then
+              return
+            end
+
             LrTasks.startAsyncTask(function()
-              ExportCollectionSet.exportCollectionSets(collectionSets, properties.rootPath, properties.exportSettingsPath)
+              ExportCollectionSet.exportCollectionSets(
+                collectionSets,
+                properties.rootPath,
+                properties.exportSettingsPath,
+                deleteUnmatchedFiles
+              )
             end)
           else
             LrDialogs.message("Error", "Please select a folder before proceeding.", "critical")

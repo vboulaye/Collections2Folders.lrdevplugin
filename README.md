@@ -45,6 +45,7 @@ This dialog will allow you to choose one collection set from your catalog, a des
 - The same as in the two previous steps for any collection set contained within the parent set.
 - Only photos rated 5 stars and not marked as rejected are exported. Collections with no matching photos are skipped.
 - Existing exports are skipped when their file modification time is newer than the photo's latest Lightroom edit time. Missing or older exports are regenerated.
+- Optionally delete unmatched image/video files directly inside collection folders. This is off by default and requires confirmation; it removes files whose paths no longer match photos in the corresponding Lightroom collection.
 - The destination folder and export settings file are remembered between Lightroom sessions. The file selector opens in the previously used export-settings folder, or Lightroom's default user export-presets folder when available.
 
 #### Export the contents from all the collection sets in the catalog
