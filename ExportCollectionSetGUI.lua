@@ -6,6 +6,7 @@ local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
 
 local ExportCollectionSet = require 'ExportCollectionSet'
+local Utils = require 'Utils'
 
 local function showExportDialog()
 
@@ -23,8 +24,9 @@ local function showExportDialog()
             table.insert(items, {title = collectionSet:getName(), value = collectionSet})
           end
 
-          
           properties.collectionSet = items[1].value
+          properties.rootPath = Utils.getSavedRootPath()
+          properties.exportSettingsPath = Utils.getSavedExportSettingsPath()
 
           local contents = f:column {
             bind_to_object = properties,
@@ -44,9 +46,15 @@ local function showExportDialog()
             f:push_button {
               title = "Select Folder",
               action = function()
-                local result = LrDialogs.runOpenPanel({canChooseDirectories = true, allowsMultipleSelection = false, canChooseFiles = false})
+                local result = LrDialogs.runOpenPanel({
+                  canChooseDirectories = true,
+                  allowsMultipleSelection = false,
+                  canChooseFiles = false,
+                  initialDirectory = properties.rootPath,
+                })
                 if result then
                   properties.rootPath = result[1]
+                  Utils.saveRootPath(result[1])
                 end
               end,
             },
@@ -61,13 +69,20 @@ local function showExportDialog()
             f:push_button {
               title = "Select Export Settings",
               action = function()
-                local result = LrDialogs.runOpenPanel({canChooseFiles = true, allowsMultipleSelection = false, canChooseDirectories = false, prompt = "Select ExportSettings.lrtemplate"})
+                local result = LrDialogs.runOpenPanel({
+                  canChooseFiles = true,
+                  allowsMultipleSelection = false,
+                  canChooseDirectories = false,
+                  prompt = "Select ExportSettings.lrtemplate",
+                  initialDirectory = Utils.getExportSettingsDirectory(),
+                })
                 if result then
                   local filePath = result[1]
                   if filePath:sub(-11) ~= ".lrtemplate" then
                     LrDialogs.message("Error", "Please select a .lrtemplate file.", "critical")
                   else
                     properties.exportSettingsPath = filePath
+                    Utils.saveExportSettingsPath(filePath)
                   end
                 end
               end,

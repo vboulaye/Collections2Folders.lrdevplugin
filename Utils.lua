@@ -1,5 +1,68 @@
 local LrPathUtils = import 'LrPathUtils'
 local LrFileUtils = import 'LrFileUtils'
+local LrPrefs = import 'LrPrefs'
+
+local preferences = LrPrefs.prefsForPlugin()
+
+local function getExistingPreferencePath(key)
+  local path = preferences[key]
+  if type(path) == 'string' and LrFileUtils.exists(path) then
+    return path
+  end
+  return nil
+end
+
+local function savePreferencePath(key, path)
+  preferences[key] = path
+end
+
+local function childPath(path, components)
+  for _, component in ipairs(components) do
+    path = LrPathUtils.child(path, component)
+  end
+  return path
+end
+
+local function getDefaultExportSettingsDirectory()
+  local appDataPath = LrPathUtils.getStandardFilePath('appData')
+  if appDataPath then
+    local windowsPath = childPath(appDataPath, {
+      'Adobe', 'Lightroom', 'Export Presets', 'User Presets'
+    })
+    if LrFileUtils.exists(windowsPath) then
+      return windowsPath
+    end
+  end
+
+  local homePath = LrPathUtils.getStandardFilePath('home')
+  if homePath then
+    local macOSPath = childPath(homePath, {
+      'Library', 'Application Support', 'Adobe', 'Lightroom', 'Export Presets', 'User Presets'
+    })
+    if LrFileUtils.exists(macOSPath) then
+      return macOSPath
+    end
+  end
+
+  return nil
+end
+
+local function getExportSettingsDirectory()
+  local savedDirectory = getExistingPreferencePath('lastExportSettingsDirectory')
+  if savedDirectory then
+    return savedDirectory
+  end
+
+  local savedSettingsPath = getExistingPreferencePath('lastExportSettingsPath')
+  if savedSettingsPath then
+    local parentDirectory = LrPathUtils.parent(savedSettingsPath)
+    if parentDirectory and LrFileUtils.exists(parentDirectory) then
+      return parentDirectory
+    end
+  end
+
+  return getDefaultExportSettingsDirectory()
+end
 
 local function createFolder(path)
   if not LrFileUtils.exists(path) then
@@ -58,5 +121,19 @@ return {
   createFolder = createFolder,
   defineDestination = defineDestination,
   len = len,
-  loadExportSettings = loadExportSettings
+  loadExportSettings = loadExportSettings,
+  getSavedRootPath = function()
+    return getExistingPreferencePath('lastRootPath')
+  end,
+  getSavedExportSettingsPath = function()
+    return getExistingPreferencePath('lastExportSettingsPath')
+  end,
+  saveRootPath = function(path)
+    savePreferencePath('lastRootPath', path)
+  end,
+  saveExportSettingsPath = function(path)
+    savePreferencePath('lastExportSettingsPath', path)
+    savePreferencePath('lastExportSettingsDirectory', LrPathUtils.parent(path))
+  end,
+  getExportSettingsDirectory = getExportSettingsDirectory
 }
