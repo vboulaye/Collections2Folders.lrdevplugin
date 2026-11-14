@@ -1,4 +1,5 @@
 local LrExportSession = import 'LrExportSession'
+local LrFileUtils = import 'LrFileUtils'
 local Utils = require 'Utils'
 
 local function exportCollection(collection, path, exportSettings) 
@@ -29,6 +30,20 @@ local function exportCollection(collection, path, exportSettings)
     exportSettings = renameEx,
     outputPath = outputPath,
   })
+
+  for _, rendition in exportSession:renditions() do
+    local fileAttributes = LrFileUtils.fileAttributes(rendition.destinationPath)
+    local existingModificationDate = fileAttributes.fileModificationDate
+    local lastEditTime = rendition.photo:getRawMetadata('lastEditTime')
+
+    -- Both timestamps use Lightroom's seconds-since-2001 time base.
+    -- Re-export on equal timestamps to avoid missing edits within the same second.
+    if type(existingModificationDate) == 'number'
+      and type(lastEditTime) == 'number'
+      and existingModificationDate > lastEditTime then
+      rendition:skipRender()
+    end
+  end
 
   exportSession:doExportOnCurrentTask()
 end
