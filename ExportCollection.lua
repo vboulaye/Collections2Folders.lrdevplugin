@@ -2,7 +2,12 @@ local LrExportSession = import 'LrExportSession'
 local Utils = require 'Utils'
 
 local function exportCollection(collection, path, exportSettings) 
-  local photos = collection:getPhotos()
+  local photos = {}
+  for _, photo in ipairs(collection:getPhotos()) do
+    if photo:getRawMetadata('rating') == 5 and photo:getRawMetadata('pickStatus') ~= -1 then
+      table.insert(photos, photo)
+    end
+  end
 
   if (Utils.len(photos) == 0) then
     return
@@ -31,4 +36,3 @@ end
 return {
   exportCollection = exportCollection
 }
-

@@ -43,6 +43,7 @@ This dialog will allow you to choose one collection set from your catalog, a des
 - The creation of a folder with the collection set's name within the selected destination folder.
 - The creation of a subfolder for each collection contained in the set, with the same name as each collection, in which the collection's photographs will be exported.
 - The same as in the two previous steps for any collection set contained within the parent set.
+- Only photos rated 5 stars and not marked as rejected are exported. Collections with no matching photos are skipped.
 
 #### Export the contents from all the collection sets in the catalog
 
